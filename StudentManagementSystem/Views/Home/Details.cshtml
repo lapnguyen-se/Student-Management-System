@@ -1,0 +1,172 @@
+﻿@model IEnumerable<StudentManagementSystem.Models.Record>
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="container">
+	<p>
+		@Html.ActionLink("Edit", "Edit", new { id = ViewBag.StudentId }) |
+		@Html.ActionLink("Back to List", "Index")
+	</p>
+	<h1 style="text-align:center;">Student Details</h1>
+	<div class="jumbotron">
+		<div class="row">
+			<div class="col-md-6">
+				<b>First Name: </b> @ViewBag.StudentFirstName <br />
+				<b>Last Name: </b> @ViewBag.StudentLastName <br />
+				<b>Student Code: </b> @ViewBag.StudentCode <br />
+			</div>
+			<div class="col-md-6">
+				<b>Phone Number: </b> @ViewBag.PhoneNumber <br />
+				<b>Address: </b> @ViewBag.Address <br />
+				<b>Course: </b> @ViewBag.CourseId - @ViewBag.CourseName (@ViewBag.TotalCredit credits) <br />
+			</div>
+
+		</div>
+	
+		
+	</div>
+
+	<h3 class="label-default" style="color: white; padding: 5px;">Total records: @Model.Count()</h3>
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>
+					@Html.DisplayNameFor(model => model.Unit.UnitCode)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.Unit.Name)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.Unit.UnitChair)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.Unit.TotalCredit)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.Result)
+				</th>
+			</tr>
+		</thead>
+		@{
+			int  totalAchieved =0;
+			int totalFailed = 0;
+			int need = ViewBag.TotalCredit;
+		}
+		@foreach (var item in Model)
+		{
+			<tr>
+				<td>
+					@Html.DisplayFor(modelItem => item.Unit.UnitCode)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Unit.Name)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Unit.UnitChair)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Unit.TotalCredit)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Result)
+					@{
+						if (item.Result >= 50)
+						{
+							totalAchieved += item.Unit.TotalCredit;
+							need-= item.Unit.TotalCredit;
+						}
+						else
+						{
+							totalFailed += item.Unit.TotalCredit;
+						}
+					}
+				</td>
+			</tr>
+		}
+	</table>
+</div>
+
+<div class="row">
+	<div class="col-md-4 text-center"></div>
+	<div class="col-md-4 text-center">
+		<canvas id="myCanvas"></canvas>
+	</div>
+	<div class="col-md-4 text-center">
+		<p class="label label-success" style="float: left; width: 100%; font-size: 1.4em;">Achieved: @totalAchieved </p>
+		<p class="label label-danger" style="float: left; width: 100%; font-size: 1.4em;">Failed: @totalFailed </p>
+		<p class="label label-warning" style="float: left; width: 100%; font-size: 1.4em;">Remaining: @need</p>	
+	</div>
+</div>
+
+
+
+<canvas id="canvasId"></canvas>
+
+
+@section scripts {
+	<script type="text/javascript">
+		var data = [{
+			value: @totalAchieved,
+			color: "#5cb85c"
+		}, {
+			value:  @totalFailed,
+			color: "#d9534f"
+		}, {
+			label: "three",
+			value:  @need,
+			color: "#f0ad4e"
+		}];
+
+		var total = 0;
+		for (obj of data) {
+			total += obj.value;
+		}
+
+		var canvas = document.getElementById('myCanvas');
+		canvas.width = 300;
+		canvas.height = 300;
+		var ctx = canvas.getContext('2d');
+		var previousRadian;
+		var middle = {
+			x: canvas.width / 2,
+			y: canvas.height / 2,
+			radius: canvas.height / 2,
+		};
+
+		//background
+		//ctx.beginPath();
+		//ctx.arc(middle.x, middle.y, middle.radius, 0, 2 * Math.PI);
+		//ctx.closePath();
+		//ctx.stroke();
+		//ctx.fillStyle = "black";
+		//ctx.fill();
+		//end of background
+
+		for (obj of data) {
+			previousRadian = previousRadian || 0;
+			obj.percentage = parseInt((obj.value / total) * 100)
+
+			ctx.beginPath();
+			ctx.fillStyle = obj.color;
+			obj.radian = (Math.PI * 2) * (obj.value / total);
+			ctx.moveTo(middle.x, middle.y);
+			//middle.radius - 2 is to add border between the background and the pie chart
+			ctx.arc(middle.x, middle.y, middle.radius - 2, previousRadian, previousRadian + obj.radian, false);
+			ctx.closePath();
+			ctx.fill();
+			ctx.save();
+			ctx.translate(middle.x, middle.y);
+			ctx.fillStyle = "black";
+			ctx.font = middle.radius / 10 + "px Arial";
+			ctx.rotate(previousRadian + obj.radian);
+			//var labelText = "'" + obj.label + "' " + obj.percentage + "%";
+			//ctx.fillText(labelText, ctx.measureText(labelText).width / 2, 0);
+			ctx.restore();
+
+			previousRadian += obj.radian;
+
+		}
+	</script>
+}
